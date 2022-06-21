@@ -6,14 +6,21 @@
 
 using namespace Rcpp;
 
+#ifdef RCPP_USE_GLOBAL_ROSTREAM
+Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
+Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+#endif
+
 
 RcppExport SEXP _rcpp_module_boot_stan_fit4Gompertz_stan_model_mod();
 RcppExport SEXP _rcpp_module_boot_stan_fit4Logistic_stan_model_mod();
+RcppExport SEXP _rcpp_module_boot_stan_fit4Schnute_stan_model_mod();
 RcppExport SEXP _rcpp_module_boot_stan_fit4VB_stan_model_mod();
 
 static const R_CallMethodDef CallEntries[] = {
     {"_rcpp_module_boot_stan_fit4Gompertz_stan_model_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4Gompertz_stan_model_mod, 0},
     {"_rcpp_module_boot_stan_fit4Logistic_stan_model_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4Logistic_stan_model_mod, 0},
+    {"_rcpp_module_boot_stan_fit4Schnute_stan_model_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4Schnute_stan_model_mod, 0},
     {"_rcpp_module_boot_stan_fit4VB_stan_model_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4VB_stan_model_mod, 0},
     {NULL, NULL, 0}
 };

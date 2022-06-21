@@ -1,0 +1,9 @@
+To (re)build on Windows
+
+After adding the code for the Schnute model,
+run "rstantools::rstan_config()" to generate and compile the Stan code.
+
+Then run "pkgbuild::compile_dll()" and "devtools::document()".
+
+Built on Windows 10 with R version 4.0.5 and Rtools 4.0.
+
