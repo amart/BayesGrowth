@@ -38,7 +38,7 @@ model {
   L1 ~ normal(priors[2], priors_se[2]);
 
   a ~ uniform(0, priors[3]);
-  b ~ uniform(0, priors[4]);
+  b ~ uniform(-25, priors[4]);
 
   sigma ~ uniform(0, priors[5]);
 

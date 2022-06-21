@@ -113,8 +113,7 @@ Estimate_MCMC_Growth <- function(data,  Model = NULL, Linf = NULL, Linf.se = NUL
 
     a <- suppressWarnings(abs(-log(model$coef[2]))) #in case a nan occurs
     a <- ifelse(is.nan(a),0.1,a) # in case a nan occurs
-    b <- suppressWarnings(abs(-log(model$coef[4]))) #in case a nan occurs
-    b <- ifelse(is.nan(b),0.1,b) # in case a nan occurs
+    b <- -19.0 # from paper from Brit
 
     L2<-abs(model$coef[1]/(1-model$coef[2]))
 
@@ -123,10 +122,12 @@ Estimate_MCMC_Growth <- function(data,  Model = NULL, Linf = NULL, Linf.se = NUL
     return(list(L2 = L2, L1 = L1, a = a, b = b, sigma = sigma.max/2))
   }
 
-  if(starting_parameters(1)$k >= k.max) stop("k.max is too low. Consider increasing it")
+  if (Model != "Sch") {
+    if(starting_parameters(1)$k >= k.max) stop("k.max is too low. Consider increasing it")
+  } else {
+    if(starting_parameters_Schnute(1)$a >= a.max) stop("a.max is too low. Consider increasing it")
+  }
 
-  if(starting_parameters_Schnute(1)$a >= a.max) stop("a.max is too low. Consider increasing it")
-  if(starting_parameters_Schnute(1)$b >= b.max) stop("b.max is too low. Consider increasing it")
 
   if(verbose == FALSE){
     text <- 0
@@ -335,8 +336,7 @@ Compare_Growth_Models <- function(data,   Linf = NULL, Linf.se = NULL,
 
     a <- suppressWarnings(abs(-log(model$coef[2]))) #in case a nan occurs
     a <- ifelse(is.nan(a),0.1,a) # in case a nan occurs
-    b <- suppressWarnings(abs(-log(model$coef[4]))) #in case a nan occurs
-    b <- ifelse(is.nan(b),0.1,b) # in case a nan occurs
+    b <- -19.0 # in paper from Brit
 
     L2<-abs(model$coef[1]/(1-model$coef[2]))
 
@@ -345,9 +345,11 @@ Compare_Growth_Models <- function(data,   Linf = NULL, Linf.se = NULL,
     return(list(L2 = L2, L1 = L1, a = a, b = b, sigma = sigma.max/2))
   }
 
-  if(starting_parameters(1)$k >= k.max) stop("k.max is too low. Consider increasing it")
-  if(starting_parameters_Schnute(1)$a >= a.max) stop("a.max is too low. Consider increasing it")
-  if(starting_parameters_Schnute(1)$b >= b.max) stop("b.max is too low. Consider increasing it")
+  if (Model != "Sch") {
+    if(starting_parameters(1)$k >= k.max) stop("k.max is too low. Consider increasing it")
+  } else {
+    if(starting_parameters_Schnute(1)$a >= a.max) stop("a.max is too low. Consider increasing it")
+  }
 
   if(verbose == FALSE){
     text <- 0

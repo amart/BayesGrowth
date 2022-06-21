@@ -311,7 +311,7 @@ public:
             current_statement_begin__ = 40;
             lp_accum__.add(uniform_log<propto__>(a, 0, get_base1(priors, 3, "priors", 1)));
             current_statement_begin__ = 41;
-            lp_accum__.add(uniform_log<propto__>(b, 0, get_base1(priors, 4, "priors", 1)));
+            lp_accum__.add(uniform_log<propto__>(b, -(25), get_base1(priors, 4, "priors", 1)));
             current_statement_begin__ = 43;
             lp_accum__.add(uniform_log<propto__>(sigma, 0, get_base1(priors, 5, "priors", 1)));
             current_statement_begin__ = 47;
