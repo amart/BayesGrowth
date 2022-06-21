@@ -11,7 +11,8 @@ data {
   vector<lower=0>[n] Length; //length data
 
   //prior data
-  vector[2] tau; // age at a small length, L1; age at a large length, L2
+  real tau1; // age at a small length, L1
+  real tau2; // age at a large length, L2
   vector[5] priors; //L2, L1, a, b, sigma
   vector<lower=0>[2] priors_se; //sd of L2, L1
 
@@ -43,12 +44,12 @@ model {
 
 
   //Schnute likelihood
-  tau_diff = tau[2] - tau[1];
+  tau_diff = tau2 - tau1;
 
   for(i in 1:n){
     // PredL[i] = Linf - (Linf - L0)*exp(-k*Age[i]);
 
-    age_diff = Age[i] - tau[1];
+    age_diff = Age[i] - tau1;
 
     if (a != 0 && b != 0) {
         PredL[i] = ((L1^b) + ( ((L2^b) - (L1^b)) * (1 - exp(-a * age_diff)) / (1 - exp(-a * tau_diff)) ) )^(1/b);
@@ -73,8 +74,12 @@ model {
 generated quantities {
     vector[n] log_lik;
 
+    tau_diff = tau2 - tau1;
+
     for (i in 1:n) {
       // log_lik[i] = normal_lpdf(Length[i]|(L2 - (L2 - L1)*exp(-k*Age[i])), sigma);
+
+      age_diff = Age[i] - tau1;
 
       if (a != 0 && b != 0) {
           log_lik[i] = normal_lpdf(Length[i] | ( ((L1^b) + ( ((L2^b) - (L1^b)) * (1 - exp(-a * age_diff)) / (1 - exp(-a * tau_diff)) ) )^(1/b) ), sigma);

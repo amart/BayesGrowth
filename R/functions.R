@@ -12,18 +12,21 @@
 #'     detect columns with similar names. If age and length columns cannot be determined then
 #'     an error will occur. The dataset can have additional columns which will be ignored by
 #'     the function
-#' @param Model Which growth model should be run? Must be one of "VB", "Gom" or "Log" for von
-#'     Bertalanffy, Gompertz or Logistic models, respectively
-#' @param Linf The prior for asymptotic length. MUst be in the same unit (i.e. cm or mm) as the data.
+#' @param Model Which growth model should be run? Must be one of "VB", "Gom", "Log", "Sch" for von
+#'     Bertalanffy, Gompertz, Logistic, or Schnute models, respectively
+#' @param Linf The prior for asymptotic length. L2 for Schnute. Must be in the same unit (i.e. cm or mm) as the data.
 #'     This should be based off of maximum size for the species.
 #' @param Linf.se The prior for normally distributed standard error around
-#'     asymptotic length. MUst be in the same unit (i.e. cm or mm) as the data. Cannot be zero.
-#' @param L0 The prior for length-at-birth. MUst be in the same unit (i.e. cm or mm) as the data.
+#'     asymptotic length. Must be in the same unit (i.e. cm or mm) as the data. Cannot be zero.
+#' @param L0 The prior for length-at-birth. L1 for Schnute. Must be in the same unit (i.e. cm or mm) as the data.
 #'     This should be based off of minimum size for the species.
 #' @param L0.se The prior for normally distributed standard error around
-#'     length-at-birth. MUst be in the same unit (i.e. cm or mm) as the data. Cannot be zero.
+#'     length-at-birth. Must be in the same unit (i.e. cm or mm) as the data. Cannot be zero.
 #' @param k.max The maximum value to consider for the growth completion parameter 'k'. In
-#'     the Gompertz and Logistic models, this parameter is often notated as 'g' instead of 'k'.
+#'     the Gompertz and Logistic models, this parameter is often notated as 'g' instead of 'k'. 'a' for Schnute.
+#' @param b.max The maximum value to consider for the Schnute growth completion parameter 'b'. Not used otherwise.
+#' @param tau1 The age for Schnute L1. Not used otherwise.
+#' @param tau2 The age for Schnute L2. Not used otherwise.
 #' @param sigma.max The maximum value to consider for sigma. This is the variance around the
 #'     length-at-age residuals.
 #' @param iter How many MCMC iterations should be run? Default is 10000 but fewer can be useful to
@@ -44,14 +47,25 @@
 #' @return An object of class 'stanfit' from the rstan package.
 #' @export
 Estimate_MCMC_Growth <- function(data,  Model = NULL, Linf = NULL, Linf.se = NULL,
-                                 L0 = NULL, L0.se = NULL, k.max = NULL, sigma.max = NULL,
+                                 L0 = NULL, L0.se = NULL, k.max = NULL, b.max = NULL, tau1 = NULL, tau2 = NULL, sigma.max = NULL,
                                  iter = 10000, BurnIn = iter/2, n_cores = 1, controls = NULL,
                                  n.chains = 4, thin = 1,verbose = FALSE){
 
   if(any(is.null(c(Linf, Linf.se, L0, L0.se, k.max, sigma.max)))) stop("At least one parameter or its error are not correctly specified")
+  if(Linf.se == 0 | L0.se == 0) stop("L0 and Linf standard error priors cannot be zero")
+
+  # for Schnute
+  L2    <- Linf
+  L2.se <- Linf.se
+  L1    <- L0
+  L1.se <- L0.se
+
+  a.max <- k.max
+
+
   if(length(Model) != 1) stop("Only one growth model can be used in each function call")
   if(is.null(Model))stop("Growth model has not been specified")
-  if(!Model %in% c("VB", "Gom", "Log")) stop("Model must be specified as either'VB', 'Log' or 'Gom'")
+  if(!Model %in% c("VB", "Gom", "Log", "Sch")) stop("Model must be specified as either 'VB', 'Log', 'Gom', or 'Sch")
 
 
   age_col <- grep("age", substr(tolower(names(data)),1,3))
@@ -63,7 +77,6 @@ Estimate_MCMC_Growth <- function(data,  Model = NULL, Linf = NULL, Linf.se = NUL
   if(length(len_col) >1) stop("Multiple length columns detected. Remove unecessary variables or rename desired column to 'Length' ")
 
 
-  if(Linf.se == 0 | L0.se == 0) stop("L0 and Linf standard error priors cannot be zero")
   if(any(is.na(data))) stop("data contains NA's")
 
   if(n_cores >  parallel::detectCores()-1) {
@@ -91,7 +104,29 @@ Estimate_MCMC_Growth <- function(data,  Model = NULL, Linf = NULL, Linf.se = NUL
     return(list(Linf = Linf, L0 = L0, k = k, sigma = sigma.max/2))
   }
 
+  starting_parameters_Schnute <- function(chain_id){
+
+    mean.age<-tapply(Length, round(Age), mean,na.rm = T)
+    Lt1<-mean.age[2:length(mean.age)]
+    Lt<-mean.age[1:length(mean.age)-1]
+    model<-lm(Lt1 ~ Lt)
+
+    a <- suppressWarnings(abs(-log(model$coef[2]))) #in case a nan occurs
+    a <- ifelse(is.nan(a),0.1,a) # in case a nan occurs
+    b <- suppressWarnings(abs(-log(model$coef[4]))) #in case a nan occurs
+    b <- ifelse(is.nan(b),0.1,b) # in case a nan occurs
+
+    L2<-abs(model$coef[1]/(1-model$coef[2]))
+
+    L1<-lm(mean.age ~ poly(as.numeric(names(mean.age)), 2, raw = TRUE))$coef[1]
+
+    return(list(L2 = L2, L1 = L1, a = a, b = b, sigma = sigma.max/2))
+  }
+
   if(starting_parameters(1)$k >= k.max) stop("k.max is too low. Consider increasing it")
+
+  if(starting_parameters_Schnute(1)$a >= a.max) stop("a.max is too low. Consider increasing it")
+  if(starting_parameters_Schnute(1)$b >= b.max) stop("b.max is too low. Consider increasing it")
 
   if(verbose == FALSE){
     text <- 0
@@ -99,14 +134,26 @@ Estimate_MCMC_Growth <- function(data,  Model = NULL, Linf = NULL, Linf.se = NUL
     text <- iter/10
   }
 
-  priors <- c(Linf, L0, k.max, sigma.max)
-  priors_se <- c(Linf.se, L0.se)
+  if (Model != "Sch") {
+    priors <- c(Linf, L0, k.max, sigma.max)
+    priors_se <- c(Linf.se, L0.se)
 
-  dat <- list(n = length(Age),
-              Age = Age,
-              Length = Length,
-              priors = priors,
-              priors_se = priors_se)
+    dat <- list(n = length(Age),
+                Age = Age,
+                Length = Length,
+                priors = priors,
+                priors_se = priors_se)
+  } else {
+    priors <- c(L2, L1, a.max, b.max, sigma.max)
+    priors_se <- c(L2.se, L1.se)
+
+    dat <- list(n = length(Age),
+                Age = Age,
+                Length = Length,
+                tau1 = tau1, tau2 = tau2,
+                priors = priors,
+                priors_se = priors_se)
+  }
 
   if(Model == "VB"){
     Growth_model <- rstan::sampling(object = stanmodels$VB_stan_model,
@@ -157,9 +204,24 @@ Estimate_MCMC_Growth <- function(data,  Model = NULL, Linf = NULL, Linf.se = NUL
                                     pars = c("Linf", "k","L0", "sigma"),
                                     chains=n.chains)
 
+ } else if(Model == "Sch"){
+    Growth_model <- rstan::sampling(object = stanmodels$Schnute_stan_model,
+                                    data = dat,
+                                    init = starting_parameters_Schnute,
+                                    control = controls,
+                                    warmup = BurnIn,
+                                    thin = thin,
+                                    verbose = verbose,
+                                    iter = iter,
+                                    open_progress = FALSE,
+                                    refresh = text,
+                                    cores = n_cores,
+                                    include = TRUE,
+                                    pars = c("L2", "a", "L1", "sigma", "b"),
+                                    chains=n.chains)
 
   } else{
-    stop("Model must be specified as either'VB', 'Log' or 'Gom'")
+    stop("Model must be specified as either 'VB', 'Log', 'Gom', or 'Sch'")
   }
 
 
@@ -177,16 +239,17 @@ Estimate_MCMC_Growth <- function(data,  Model = NULL, Linf = NULL, Linf.se = NUL
 #'     detect columns with similar names. If age and length columns cannot be determined then
 #'     an error will occur. The dataset can have additional columns which will be ignored by
 #'     the function
-#' @param Linf The prior for asymptotic length. MUst be in the same unit (i.e. cm or mm) as the data.
+#' @param Linf The prior for asymptotic length. L2 for Schnute. Must be in the same unit (i.e. cm or mm) as the data.
 #'     This should be based off of maximum size for the species.
 #' @param Linf.se The prior for normally distributed standard error around
-#'     asymptotic length. MUst be in the same unit (i.e. cm or mm) as the data. Cannot be zero.
-#' @param L0 The prior for length-at-birth. MUst be in the same unit (i.e. cm or mm) as the data.
+#'     asymptotic length. Must be in the same unit (i.e. cm or mm) as the data. Cannot be zero.
+#' @param L0 The prior for length-at-birth. L1 for Schnute. Must be in the same unit (i.e. cm or mm) as the data.
 #'     This should be based off of minimum size for the species.
 #' @param L0.se The prior for normally distributed standard error around
-#'     length-at-birth. MUst be in the same unit (i.e. cm or mm) as the data. Cannot be zero.
+#'     length-at-birth. Must be in the same unit (i.e. cm or mm) as the data. Cannot be zero.
 #' @param k.max The maximum value to consider for the growth completion parameter 'k'. In
-#'     the Gompertz and Logistic models, this parameter is often notated as 'g' instead of 'k'.
+#'     the Gompertz and Logistic models, this parameter is often notated as 'g' instead of 'k'. 'a' for Schnute.
+#' @param b.max The maximum value to consider for the Schnute growth completion parameter 'b'. Not used otherwise.
 #' @param sigma.max The maximum value to consider for sigma. This is the variance around the
 #'     length-at-age residuals.
 #' @param iter How many MCMC iterations should be run? Default is 10000 but fewer can be useful to
@@ -208,12 +271,21 @@ Estimate_MCMC_Growth <- function(data,  Model = NULL, Linf = NULL, Linf.se = NUL
 #' @return A dataframe with the requested stats
 #' @export
 Compare_Growth_Models <- function(data,   Linf = NULL, Linf.se = NULL,
-                                  L0 = NULL, L0.se = NULL, k.max = NULL, sigma.max = NULL,
+                                  L0 = NULL, L0.se = NULL, k.max = NULL, b.max = NULL, tau1 = NULL, tau2 = NULL, sigma.max = NULL,
                                   iter = 10000, BurnIn = iter/2, n_cores = 1,controls = NULL,
                                   n.chains = 4, thin = 1,verbose = FALSE, stats = "LooIC"){
 
 
   if(any(is.null(c(Linf, Linf.se, L0, L0.se, k.max, sigma.max)))) stop("At least one parameter or its error are not correctly specified")
+  if(Linf.se == 0 | L0.se == 0) stop("L0 and Linf standard error priors cannot be zero")
+
+  # for Schnute
+  L2    <- Linf
+  L2.se <- Linf.se
+  L1    <- L0
+  L1.se <- L0.se
+
+  a.max <- k.max
 
 
   age_col <- grep("age", substr(tolower(names(data)),1,3))
@@ -225,7 +297,6 @@ Compare_Growth_Models <- function(data,   Linf = NULL, Linf.se = NULL,
   if(length(len_col) >1) stop("Multiple length columns detected. Remove unecessary variables or rename desired column to 'Length' ")
 
 
-  if(Linf.se == 0 | L0.se == 0) stop("L0 and Linf standard error priors cannot be zero")
   if(any(is.na(data))) stop("data contains NA's")
 
   if(n_cores >  parallel::detectCores()-1) {
@@ -255,7 +326,28 @@ Compare_Growth_Models <- function(data,   Linf = NULL, Linf.se = NULL,
     return(list(Linf = Linf, L0 = L0, k = k, sigma = sigma.max/2))
   }
 
+  starting_parameters_Schnute <- function(chain_id){
+
+    mean.age<-tapply(Length, round(Age), mean,na.rm = T)
+    Lt1<-mean.age[2:length(mean.age)]
+    Lt<-mean.age[1:length(mean.age)-1]
+    model<-lm(Lt1 ~ Lt)
+
+    a <- suppressWarnings(abs(-log(model$coef[2]))) #in case a nan occurs
+    a <- ifelse(is.nan(a),0.1,a) # in case a nan occurs
+    b <- suppressWarnings(abs(-log(model$coef[4]))) #in case a nan occurs
+    b <- ifelse(is.nan(b),0.1,b) # in case a nan occurs
+
+    L2<-abs(model$coef[1]/(1-model$coef[2]))
+
+    L1<-lm(mean.age ~ poly(as.numeric(names(mean.age)), 2, raw = TRUE))$coef[1]
+
+    return(list(L2 = L2, L1 = L1, a = a, b = b, sigma = sigma.max/2))
+  }
+
   if(starting_parameters(1)$k >= k.max) stop("k.max is too low. Consider increasing it")
+  if(starting_parameters_Schnute(1)$a >= a.max) stop("a.max is too low. Consider increasing it")
+  if(starting_parameters_Schnute(1)$b >= b.max) stop("b.max is too low. Consider increasing it")
 
   if(verbose == FALSE){
     text <- 0
@@ -263,14 +355,26 @@ Compare_Growth_Models <- function(data,   Linf = NULL, Linf.se = NULL,
     text <- iter/10
   }
 
-  priors <- c(Linf, L0, k.max, sigma.max)
-  priors_se <- c(Linf.se, L0.se)
+  if (Model != "Sch") {
+    priors <- c(Linf, L0, k.max, sigma.max)
+    priors_se <- c(Linf.se, L0.se)
 
-  dat <- list(n = length(Age),
-              Age = Age,
-              Length = Length,
-              priors = priors,
-              priors_se = priors_se)
+    dat <- list(n = length(Age),
+                Age = Age,
+                Length = Length,
+                priors = priors,
+                priors_se = priors_se)
+  } else {
+    priors <- c(L2, L1, a.max, b.max, sigma.max)
+    priors_se <- c(L2.se, L1.se)
+
+    dat <- list(n = length(Age),
+                Age = Age,
+                Length = Length,
+                tau1 = tau1, tau2 = tau2,
+                priors = priors,
+                priors_se = priors_se)
+  }
 
   VB_model <-
     rstan::sampling(object = stanmodels$VB_stan_model,
@@ -319,7 +423,22 @@ Compare_Growth_Models <- function(data,   Linf = NULL, Linf.se = NULL,
                                     cores = n_cores,
                                     chains=n.chains)
 
-  model_list <- list(VB = VB_model, Gompertz =Gom_model, Logistic =Logistic_model)
+  Schnute_model <- rstan::sampling(object = stanmodels$Schnute_stan_model,
+                                    data = dat,
+                                    init = starting_parameters_Schnute,
+                                    control = controls,
+                                    warmup = BurnIn,
+                                    thin = thin,
+                                    verbose = verbose,
+                                    open_progress = FALSE,
+                                    # refresh = 0,
+                                    refresh = text,
+                                    iter = iter,
+                                    cores = n_cores,
+                                    chains=n.chains)
+
+
+  model_list <- list(VB = VB_model, Gompertz = Gom_model, Logistic = Logistic_model, Schnute = Schnute_model)
 
   # calculate R eff
   r_eff_list <- lapply(model_list, function(x) {
@@ -331,9 +450,10 @@ Compare_Growth_Models <- function(data,   Linf = NULL, Linf.se = NULL,
   VB_loo <- suppressWarnings(loo::loo(VB_model,r_eff = r_eff_list[["VB"]], cores = n_cores))
   Gom_loo <- suppressWarnings(loo::loo(Gom_model,r_eff = r_eff_list[["Gompertz"]], cores = n_cores))
   Logistic_loo <- suppressWarnings(loo::loo(Logistic_model,r_eff = r_eff_list[["Logistic"]] , cores = n_cores))
+  Schnute_loo <- suppressWarnings(loo::loo(Schnute_model,r_eff = r_eff_list[["Schnute"]] , cores = n_cores))
 
   # Get loo comparions
-  Loo_comp <- as.data.frame(loo::loo_compare(list(VB = VB_loo, Gompertz = Gom_loo, Logistic = Logistic_loo)))
+  Loo_comp <- as.data.frame(loo::loo_compare(list(VB = VB_loo, Gompertz = Gom_loo, Logistic = Logistic_loo, Schnute = Schnute_loo)))
   Loo_comp <- tibble::rownames_to_column(Loo_comp, "Model")
 
   # Get looic weights
@@ -361,26 +481,32 @@ Compare_Growth_Models <- function(data,   Linf = NULL, Linf.se = NULL,
   Loo_results<- dplyr::left_join(Loo_comp, looiW,by = "Model")
 
   # get waics
-  waic_VB <- suppressWarnings(loo::waic(loo::extract_log_lik(VB_model)))
+  waic_VB  <- suppressWarnings(loo::waic(loo::extract_log_lik(VB_model)))
   waic_Gom <- suppressWarnings(loo::waic(loo::extract_log_lik(Gom_model)))
   waic_Log <- suppressWarnings(loo::waic(loo::extract_log_lik(Logistic_model)))
+  waic_Sch <- suppressWarnings(loo::waic(loo::extract_log_lik(Schnute_model)))
 
   # get Waic Weights
   waics <- c(
     waic_VB$estimates["elpd_waic", 1],
     waic_Gom$estimates["elpd_waic", 1],
-    waic_Log$estimates["elpd_waic", 1]
+    waic_Log$estimates["elpd_waic", 1],
+    waic_Sch$estimates["elpd_waic", 1]
   )
 
   # Get p_waics
   p_waic <- round(c(
     waic_VB$estimates["p_waic", 1],
     waic_Gom$estimates["p_waic", 1],
-    waic_Log$estimates["p_waic", 1]
+    waic_Log$estimates["p_waic", 1],
+    waic_Sch$estimates["p_waic", 1]
   ),1)
 
   # Combine WAIC results
-  waic_results <- data.frame(Model = c("VB", "Gompertz", "Logistic"),WAIC = waics,p_waic = p_waic,`WAIC_weight`=round(waics/sum(waics),2))
+  waic_results <- data.frame(Model = c("VB", "Gompertz", "Logistic", "Schnute"),
+                             WAIC = waics,
+                             p_waic = p_waic,
+                             `WAIC_weight`=round(waics/sum(waics),2))
 
   if(stats == "both"){
     Results <-  list(LooIC = Loo_results, WAIC = waic_results)
@@ -419,6 +545,29 @@ Get_MCMC_parameters <- function (obj)
   results <- dplyr::mutate_at(results,.vars = -everything("Parameter"), .funs = ~round(.,2))
   return(results)
 }
+
+#' Get_MCMC_parameters_Schnute
+#' @description Get parameter summary statistics from the outputs of a Estimate_MCMC_Growth object. It is simplified set of
+#'     results than is returned from summary(obj).
+#' @param obj An output from the Estimate_MCMC_Growth function
+#' @return A data.frame with the posterior distributions for each parameter.
+#'     These include the mean, Standard error of the mean, Standard deviationof the mean, median,
+#'     95th percentiles, effective sample sizes and Rhat.
+#' @import tibble
+#' @export
+#'
+Get_MCMC_parameters_Schnute <- function (obj)
+{
+  if (class(obj) != "stanfit")
+    stop("`obj` must be a result returned from `Estimate_MCMC_Growth()`")
+  results <- as.data.frame(summary(obj, pars = c("L2", "a",
+                                                 "L1", "b", "sigma"), probs = c(0.025, 0.5, 0.975))$summary)
+
+  results <- tibble::rownames_to_column(results, var = "Parameter")
+  results <- dplyr::mutate_at(results,.vars = -everything("Parameter"), .funs = ~round(.,2))
+  return(results)
+}
+
 #' Calc_Logistic_LAA
 #'
 #' @param Linf A single value of asymptotic length for the logistic model
@@ -461,6 +610,36 @@ Calc_Gompertz_LAA <- function(Linf, k, L0, Age){
   return(LAA)
 }
 
+#' Calc_Schnute_LAA
+#'
+#' @param L2 A single value of large length for the Schnute model
+#' @param a A single value of the growth completion parameter for the Schnute model
+#' @param L1 A single value of small length for the Schnute model
+#' @param b A single value of the growth completion parameter for the Schnute model
+#' @param tau1 The age for the small length L2
+#' @param tau2 The age for the large length L1
+#' @param Age A single value or vector of ages to convert to length based on the Schnute model
+#'
+#' @return A vector of length-at-ages
+#' @export
+Calc_Schnute_LAA <- function(L2, a, L1, b, tau1, tau2, Age){
+
+  tau_diff <- tau2 - tau1
+  age_diff <- Age - tau1
+
+  if (a != 0 & b != 0) {
+    LAA <- L2
+  } else if (a != 0 & b == 0) {
+    LAA <- L2
+  } else if (a == 0 & b != 0) {
+    LAA <- L2
+  } else {
+    LAA <- L2
+  }
+
+  return(LAA)
+}
+
 
 
 #' Calculate_MCMC_growth_curve
@@ -484,23 +663,35 @@ Calc_Gompertz_LAA <- function(Linf, k, L0, Age){
 #' @export
 Calculate_MCMC_growth_curve <- function(obj, Model = NULL, max.age = NULL, probs = c(0.5,0.75,0.95)){
 
-  if(!Model %in% c("VB", "Gom", "Log")) stop("'Model must be one of either 'VB', 'Gom' or 'Log")
+  if(!Model %in% c("VB", "Gom", "Log", "Sch")) stop("'Model must be one of either 'VB', 'Gom', 'Log', or 'Sch'")
   if(is.null(max.age)) stop("Please specify max age")
 
-  processed_data <- Get_MCMC_parameters(obj)
-  L0_sims <- rstan::extract(obj)$L0
-  Linf_sims <- rstan::extract(obj)$Linf
-  k_sims <- rstan::extract(obj)$k
-  processed_data <- data.frame(Linf = Linf_sims,k =  k_sims,L0 = L0_sims)
+  if (Model != "Sch") {
+      processed_data <- Get_MCMC_parameters(obj)
+      L0_sims <- rstan::extract(obj)$L0
+      Linf_sims <- rstan::extract(obj)$Linf
+      k_sims <- rstan::extract(obj)$k
+      processed_data <- data.frame(Linf = Linf_sims,k =  k_sims,L0 = L0_sims)
+  } else {
+    processed_data <- Get_MCMC_parameters_Schnute(obj)
+    L1_sims <- rstan::extract(obj)$L1
+    L2_sims <- rstan::extract(obj)$L2
+    a_sims  <- rstan::extract(obj)$a
+    b_sims  <- rstan::extract(obj)$b
+    # TODO: how to access tau1 and tau2?
+    processed_data <- data.frame(L2 = L2_sims,a = a_sims,L1 = L1_sims,b = b_sims, tau1 = tau1, tau2 = tau2)
+  }
 
   processed_data <- dplyr::mutate(processed_data, sim = row_number())
   processed_data <- dplyr::left_join(processed_data, expand.grid(sim = processed_data$sim, Age = seq(0,max.age, 0.1)), by = "sim")
   processed_data <- dplyr::mutate(processed_data, LAA = dplyr::case_when(
-    Model == "VB" ~ Calc_VBGF_LAA(Linf, k, L0, Age),
+    Model == "VB"  ~ Calc_VBGF_LAA(Linf, k, L0, Age),
     Model == "Log" ~ Calc_Logistic_LAA(Linf, k, L0, Age),
     Model == "Gom" ~ Calc_Gompertz_LAA(Linf, k, L0, Age),
+    Model == "Sch" ~ Calc_Schnute_LAA(L2, a, L1, b, tau1, tau2, Age),
     TRUE ~ NA_real_
   ))
+
   processed_data <- dplyr::group_by(processed_data, Age)
   results <-tidybayes::mean_qi(processed_data, LAA,.width = probs)
 
