@@ -11,6 +11,9 @@ Compare_Growth_Models(
   L0 = NULL,
   L0.se = NULL,
   k.max = NULL,
+  b.max = NULL,
+  tau1 = NULL,
+  tau2 = NULL,
   sigma.max = NULL,
   iter = 10000,
   BurnIn = iter/2,
@@ -28,20 +31,22 @@ detect columns with similar names. If age and length columns cannot be determine
 an error will occur. The dataset can have additional columns which will be ignored by
 the function}
 
-\item{Linf}{The prior for asymptotic length. MUst be in the same unit (i.e. cm or mm) as the data.
+\item{Linf}{The prior for asymptotic length. L2 for Schnute. Must be in the same unit (i.e. cm or mm) as the data.
 This should be based off of maximum size for the species.}
 
 \item{Linf.se}{The prior for normally distributed standard error around
-asymptotic length. MUst be in the same unit (i.e. cm or mm) as the data. Cannot be zero.}
+asymptotic length. Must be in the same unit (i.e. cm or mm) as the data. Cannot be zero.}
 
-\item{L0}{The prior for length-at-birth. MUst be in the same unit (i.e. cm or mm) as the data.
+\item{L0}{The prior for length-at-birth. L1 for Schnute. Must be in the same unit (i.e. cm or mm) as the data.
 This should be based off of minimum size for the species.}
 
 \item{L0.se}{The prior for normally distributed standard error around
-length-at-birth. MUst be in the same unit (i.e. cm or mm) as the data. Cannot be zero.}
+length-at-birth. Must be in the same unit (i.e. cm or mm) as the data. Cannot be zero.}
 
 \item{k.max}{The maximum value to consider for the growth completion parameter 'k'. In
-the Gompertz and Logistic models, this parameter is often notated as 'g' instead of 'k'.}
+the Gompertz and Logistic models, this parameter is often notated as 'g' instead of 'k'. 'a' for Schnute.}
+
+\item{b.max}{The maximum value to consider for the Schnute growth completion parameter 'b'. Not used otherwise.}
 
 \item{sigma.max}{The maximum value to consider for sigma. This is the variance around the
 length-at-age residuals.}
