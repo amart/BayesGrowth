@@ -5,5 +5,10 @@ run "rstantools::rstan_config()" to generate and compile the Stan code.
 
 Then run "pkgbuild::compile_dll()" and "devtools::document()".
 
+Install locally with "install.packages("../BayesGrowth", repos = NULL, type = "source")"
+
+
 Built on Windows 10 with R version 4.0.5 and Rtools 4.0.
+
+Built on CentOS 7.9 with R version 3.6.0 and devtools-10 for CXX14
 
