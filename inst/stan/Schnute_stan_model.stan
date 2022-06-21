@@ -42,25 +42,21 @@ model {
 
   sigma ~ uniform(0, priors[5]);
 
-
   //Schnute likelihood
-  tau_diff = tau2 - tau1;
 
   for(i in 1:n){
     // PredL[i] = Linf - (Linf - L0)*exp(-k*Age[i]);
 
-    age_diff = Age[i] - tau1;
-
     if (a != 0 && b != 0) {
-        PredL[i] = ( (L1^b) + ( ((L2^b) - (L1^b)) * (1 - exp(-a * age_diff)) / (1 - exp(-a * tau_diff)) ) )^(1/b);
+        PredL[i] = ( (L1^b) + ( ((L2^b) - (L1^b)) * (1 - exp(-a * (Age[i] - tau1))) / (1 - exp(-a * (tau2 - tau1))) ) )^(1/b);
     } else
     if (a != 0 && b == 0) {
-        PredL[i] = L1 * exp( ln(L2 / L1) * (1 - exp(-a * age_diff)) / (1 - exp(-a * tau_diff)) );
+        PredL[i] = L1 * exp( log(L2 / L1) * (1 - exp(-a * (Age[i] - tau1))) / (1 - exp(-a * (tau2 - tau1))) );
     } else
     if (a == 0 && b != 0) {
-        PredL[i] = ( (L1^b) + ( ((L2^b) - (L1^b)) * age_diff / tau_diff ) )^(1/b);
+        PredL[i] = ( (L1^b) + ( ((L2^b) - (L1^b)) * (Age[i] - tau1) / (tau2 - tau1) ) )^(1/b);
     } else {
-        PredL[i] = L1 * exp( ln(L2 / L1) * age_diff / tau_diff );
+        PredL[i] = L1 * exp( log(L2 / L1) * (Age[i] - tau1) / (tau2 - tau1) );
     }
 
     target += normal_lpdf(Length[i] | PredL[i], sigma);//likelihood
@@ -74,23 +70,19 @@ model {
 generated quantities {
     vector[n] log_lik;
 
-    tau_diff = tau2 - tau1;
-
     for (i in 1:n) {
       // log_lik[i] = normal_lpdf(Length[i]|(L2 - (L2 - L1)*exp(-k*Age[i])), sigma);
 
-      age_diff = Age[i] - tau1;
-
       if (a != 0 && b != 0) {
-          log_lik[i] = normal_lpdf(Length[i] | ( ((L1^b) + ( ((L2^b) - (L1^b)) * (1 - exp(-a * age_diff)) / (1 - exp(-a * tau_diff)) ) )^(1/b) ), sigma);
+          log_lik[i] = normal_lpdf(Length[i] | ( ((L1^b) + ( ((L2^b) - (L1^b)) * (1 - exp(-a * (Age[i] - tau1))) / (1 - exp(-a * (tau2 - tau1))) ) )^(1/b) ), sigma);
       } else
       if (a != 0 && b == 0) {
-          log_lik[i] = normal_lpdf(Length[i] | ( L1 * exp( ln(L2 / L1) * (1 - exp(-a * age_diff)) / (1 - exp(-a * tau_diff)) ) ), sigma);
+          log_lik[i] = normal_lpdf(Length[i] | ( L1 * exp( log(L2 / L1) * (1 - exp(-a * (Age[i] - tau1))) / (1 - exp(-a * (tau2 - tau1))) ) ), sigma);
       } else
       if (a == 0 && b != 0) {
-          log_lik[i] = normal_lpdf(Length[i] | ( ((L1^b) + ( ((L2^b) - (L1^b)) * age_diff / tau_diff ) )^(1/b) ), sigma);
+          log_lik[i] = normal_lpdf(Length[i] | ( ((L1^b) + ( ((L2^b) - (L1^b)) * (Age[i] - tau1) / (tau2 - tau1) ) )^(1/b) ), sigma);
       } else {
-          log_lik[i] = normal_lpdf(Length[i] | ( L1 * exp( ln(L2 / L1) * age_diff / tau_diff ) ), sigma);
+          log_lik[i] = normal_lpdf(Length[i] | ( L1 * exp( log(L2 / L1) * (Age[i] - tau1) / (tau2 - tau1) ) ), sigma);
       }
 
     }
