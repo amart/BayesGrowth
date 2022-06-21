@@ -628,13 +628,13 @@ Calc_Schnute_LAA <- function(L2, a, L1, b, tau1, tau2, Age){
   age_diff <- Age - tau1
 
   if (a != 0 & b != 0) {
-    LAA <- L2
+    LAA <- ( (L1^b) + ( ((L2^b) - (L1^b)) * (1 - exp(-a * age_diff)) / (1 - exp(-a * tau_diff)) ) )^(1/b)
   } else if (a != 0 & b == 0) {
-    LAA <- L2
+    LAA <- L1 * exp( log(L2 / L1) * (1 - exp(-a * age_diff)) / (1 - exp(-a * tau_diff)) )
   } else if (a == 0 & b != 0) {
-    LAA <- L2
+    LAA <- ( (L1^b) + ( ((L2^b) - (L1^b)) * age_diff / tau_diff ) )^(1/b)
   } else {
-    LAA <- L2
+    LAA <- L1 * exp( ln(L2 / L1) * age_diff / tau_diff )
   }
 
   return(LAA)
@@ -676,10 +676,15 @@ Calculate_MCMC_growth_curve <- function(obj, Model = NULL, max.age = NULL, probs
     processed_data <- Get_MCMC_parameters_Schnute(obj)
     L1_sims <- rstan::extract(obj)$L1
     L2_sims <- rstan::extract(obj)$L2
+
     a_sims  <- rstan::extract(obj)$a
     b_sims  <- rstan::extract(obj)$b
-    # TODO: how to access tau1 and tau2?
-    processed_data <- data.frame(L2 = L2_sims,a = a_sims,L1 = L1_sims,b = b_sims, tau1 = tau1, tau2 = tau2)
+
+    # Q: how to access tau1 and tau2? does this work
+    tau1_sims <- rstan::extract(obj)$tau1
+    tau2_sims <- rstan::extract(obj)$tau2
+
+    processed_data <- data.frame(L2 = L2_sims,a = a_sims,L1 = L1_sims,b = b_sims, tau1 = tau1_sims, tau2 = tau2_sims)
   }
 
   processed_data <- dplyr::mutate(processed_data, sim = row_number())

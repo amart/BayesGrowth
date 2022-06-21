@@ -52,13 +52,13 @@ model {
     age_diff = Age[i] - tau1;
 
     if (a != 0 && b != 0) {
-        PredL[i] = ((L1^b) + ( ((L2^b) - (L1^b)) * (1 - exp(-a * age_diff)) / (1 - exp(-a * tau_diff)) ) )^(1/b);
+        PredL[i] = ( (L1^b) + ( ((L2^b) - (L1^b)) * (1 - exp(-a * age_diff)) / (1 - exp(-a * tau_diff)) ) )^(1/b);
     } else
     if (a != 0 && b == 0) {
         PredL[i] = L1 * exp( ln(L2 / L1) * (1 - exp(-a * age_diff)) / (1 - exp(-a * tau_diff)) );
     } else
     if (a == 0 && b != 0) {
-        PredL[i] = ((L1^b) + ( ((L2^b) - (L1^b)) * age_diff / tau_diff ) )^(1/b);
+        PredL[i] = ( (L1^b) + ( ((L2^b) - (L1^b)) * age_diff / tau_diff ) )^(1/b);
     } else {
         PredL[i] = L1 * exp( ln(L2 / L1) * age_diff / tau_diff );
     }
