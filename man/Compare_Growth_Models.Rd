@@ -11,10 +11,11 @@ Compare_Growth_Models(
   L0 = NULL,
   L0.se = NULL,
   k.max = NULL,
+  sigma.max = NULL,
+  b.min = NULL,
   b.max = NULL,
   tau1 = NULL,
   tau2 = NULL,
-  sigma.max = NULL,
   iter = 10000,
   BurnIn = iter/2,
   n_cores = 1,
@@ -46,10 +47,12 @@ length-at-birth. Must be in the same unit (i.e. cm or mm) as the data. Cannot be
 \item{k.max}{The maximum value to consider for the growth completion parameter 'k'. In
 the Gompertz and Logistic models, this parameter is often notated as 'g' instead of 'k'. 'a' for Schnute.}
 
-\item{b.max}{The maximum value to consider for the Schnute growth completion parameter 'b'. Not used otherwise.}
-
 \item{sigma.max}{The maximum value to consider for sigma. This is the variance around the
 length-at-age residuals.}
+
+\item{b.min}{The minimum value to consider for the Schnute growth completion parameter 'b'. Not used otherwise.}
+
+\item{b.max}{The maximum value to consider for the Schnute growth completion parameter 'b'. Not used otherwise.}
 
 \item{iter}{How many MCMC iterations should be run? Default is 10000 but fewer can be useful to
 avoid longer run times when testing code or data}

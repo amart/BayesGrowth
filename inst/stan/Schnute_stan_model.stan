@@ -14,7 +14,7 @@ data {
   real<lower=0> tau1; // age at a small length, L1
   real<lower=0> tau2; // age at a large length, L2
 
-  vector[5] priors; //L2, L1, a, b, sigma
+  vector[6] priors; //L2, L1, a, b min, b max, sigma
   vector<lower=0>[2] priors_se; //sd of L2, L1
 
 }
@@ -40,9 +40,9 @@ model {
   L1 ~ normal(priors[2], priors_se[2]);
 
   a ~ uniform(0, priors[3]);
-  b ~ uniform(-25, priors[4]);
+  b ~ uniform(priors[4], priors[5]);
 
-  sigma ~ uniform(0, priors[5]);
+  sigma ~ uniform(0, priors[6]);
 
   //Schnute likelihood
 

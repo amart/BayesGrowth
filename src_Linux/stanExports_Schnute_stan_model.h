@@ -121,12 +121,12 @@ public:
             tau2 = vals_r__[pos__++];
             check_greater_or_equal(function__, "tau2", tau2, 0);
             current_statement_begin__ = 17;
-            validate_non_negative_index("priors", "5", 5);
-            context__.validate_dims("data initialization", "priors", "vector_d", context__.to_vec(5));
-            priors = Eigen::Matrix<double, Eigen::Dynamic, 1>(5);
+            validate_non_negative_index("priors", "6", 6);
+            context__.validate_dims("data initialization", "priors", "vector_d", context__.to_vec(6));
+            priors = Eigen::Matrix<double, Eigen::Dynamic, 1>(6);
             vals_r__ = context__.vals_r("priors");
             pos__ = 0;
-            size_t priors_j_1_max__ = 5;
+            size_t priors_j_1_max__ = 6;
             for (size_t j_1__ = 0; j_1__ < priors_j_1_max__; ++j_1__) {
                 priors(j_1__) = vals_r__[pos__++];
             }
@@ -313,9 +313,9 @@ public:
             current_statement_begin__ = 42;
             lp_accum__.add(uniform_log<propto__>(a, 0, get_base1(priors, 3, "priors", 1)));
             current_statement_begin__ = 43;
-            lp_accum__.add(uniform_log<propto__>(b, -(25), get_base1(priors, 4, "priors", 1)));
+            lp_accum__.add(uniform_log<propto__>(b, get_base1(priors, 4, "priors", 1), get_base1(priors, 5, "priors", 1)));
             current_statement_begin__ = 45;
-            lp_accum__.add(uniform_log<propto__>(sigma, 0, get_base1(priors, 5, "priors", 1)));
+            lp_accum__.add(uniform_log<propto__>(sigma, 0, get_base1(priors, 6, "priors", 1)));
             current_statement_begin__ = 49;
             for (int i = 1; i <= n; ++i) {
                 current_statement_begin__ = 52;

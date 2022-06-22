@@ -24,6 +24,7 @@
 #'     length-at-birth. Must be in the same unit (i.e. cm or mm) as the data. Cannot be zero.
 #' @param k.max The maximum value to consider for the growth completion parameter 'k'. In
 #'     the Gompertz and Logistic models, this parameter is often notated as 'g' instead of 'k'. 'a' for Schnute.
+#' @param b.min The minimum value to consider for the Schnute growth completion parameter 'b'. Not used otherwise.
 #' @param b.max The maximum value to consider for the Schnute growth completion parameter 'b'. Not used otherwise.
 #' @param tau1 The age for Schnute L1. Not used otherwise.
 #' @param tau2 The age for Schnute L2. Not used otherwise.
@@ -47,7 +48,8 @@
 #' @return An object of class 'stanfit' from the rstan package.
 #' @export
 Estimate_MCMC_Growth <- function(data,  Model = NULL, Linf = NULL, Linf.se = NULL,
-                                 L0 = NULL, L0.se = NULL, k.max = NULL, b.max = NULL, tau1 = NULL, tau2 = NULL, sigma.max = NULL,
+                                 L0 = NULL, L0.se = NULL, k.max = NULL, sigma.max = NULL,
+                                 b.min = NULL, b.max = NULL, tau1 = NULL, tau2 = NULL,
                                  iter = 10000, BurnIn = iter/2, n_cores = 1, controls = NULL,
                                  n.chains = 4, thin = 1,verbose = FALSE){
 
@@ -117,7 +119,8 @@ Estimate_MCMC_Growth <- function(data,  Model = NULL, Linf = NULL, Linf.se = NUL
 
     L2<-abs(model$coef[1]/(1-model$coef[2]))
 
-    L1<-lm(mean.age ~ poly(as.numeric(names(mean.age)), 2, raw = TRUE))$coef[1]
+    # L1<-lm(mean.age ~ poly(as.numeric(names(mean.age)), 2, raw = TRUE))$coef[1]
+    L1<-0.1*L2
 
     return(list(L2 = L2, L1 = L1, a = a, b = b, sigma = sigma.max/2))
   }
@@ -126,6 +129,7 @@ Estimate_MCMC_Growth <- function(data,  Model = NULL, Linf = NULL, Linf.se = NUL
     if(starting_parameters(1)$k >= k.max) stop("k.max is too low. Consider increasing it")
   } else {
     if(starting_parameters_Schnute(1)$a >= a.max) stop("a.max is too low. Consider increasing it")
+    if(starting_parameters_Schnute(1)$b <= b.min) stop("b.min is too high. Consider decreasing it")
     if(starting_parameters_Schnute(1)$b >= b.max) stop("b.max is too low. Consider increasing it")
   }
 
@@ -146,9 +150,9 @@ Estimate_MCMC_Growth <- function(data,  Model = NULL, Linf = NULL, Linf.se = NUL
                 priors = priors,
                 priors_se = priors_se)
   } else {
-    if(any(is.null(c(a.max, b.max, sigma.max)))) stop("At least one Schnute parameter or its error are not correctly specified")
+    if(any(is.null(c(b.min, b.max, tau1, tau2)))) stop("At least one Schnute parameter or its error are not correctly specified")
 
-    priors <- c(L2, L1, a.max, b.max, sigma.max)
+    priors <- c(L2, L1, a.max, b.min, b.max, sigma.max)
     priors_se <- c(L2.se, L1.se)
 
     dat <- list(n = length(Age),
@@ -254,6 +258,7 @@ Estimate_MCMC_Growth <- function(data,  Model = NULL, Linf = NULL, Linf.se = NUL
 #'     length-at-birth. Must be in the same unit (i.e. cm or mm) as the data. Cannot be zero.
 #' @param k.max The maximum value to consider for the growth completion parameter 'k'. In
 #'     the Gompertz and Logistic models, this parameter is often notated as 'g' instead of 'k'. 'a' for Schnute.
+#' @param b.min The minimum value to consider for the Schnute growth completion parameter 'b'. Not used otherwise.
 #' @param b.max The maximum value to consider for the Schnute growth completion parameter 'b'. Not used otherwise.
 #' @param sigma.max The maximum value to consider for sigma. This is the variance around the
 #'     length-at-age residuals.
@@ -276,7 +281,8 @@ Estimate_MCMC_Growth <- function(data,  Model = NULL, Linf = NULL, Linf.se = NUL
 #' @return A dataframe with the requested stats
 #' @export
 Compare_Growth_Models <- function(data,   Linf = NULL, Linf.se = NULL,
-                                  L0 = NULL, L0.se = NULL, k.max = NULL, b.max = NULL, tau1 = NULL, tau2 = NULL, sigma.max = NULL,
+                                  L0 = NULL, L0.se = NULL, k.max = NULL, sigma.max = NULL,
+                                  b.min = NULL, b.max = NULL, tau1 = NULL, tau2 = NULL,
                                   iter = 10000, BurnIn = iter/2, n_cores = 1,controls = NULL,
                                   n.chains = 4, thin = 1,verbose = FALSE, stats = "LooIC"){
 
@@ -344,7 +350,8 @@ Compare_Growth_Models <- function(data,   Linf = NULL, Linf.se = NULL,
 
     L2<-abs(model$coef[1]/(1-model$coef[2]))
 
-    L1<-lm(mean.age ~ poly(as.numeric(names(mean.age)), 2, raw = TRUE))$coef[1]
+    # L1<-lm(mean.age ~ poly(as.numeric(names(mean.age)), 2, raw = TRUE))$coef[1]
+    L1<-0.1*L2
 
     return(list(L2 = L2, L1 = L1, a = a, b = b, sigma = sigma.max/2))
   }
@@ -353,6 +360,7 @@ Compare_Growth_Models <- function(data,   Linf = NULL, Linf.se = NULL,
     if(starting_parameters(1)$k >= k.max) stop("k.max is too low. Consider increasing it")
   } else {
     if(starting_parameters_Schnute(1)$a >= a.max) stop("a.max is too low. Consider increasing it")
+    if(starting_parameters_Schnute(1)$b <= b.min) stop("b.min is too high. Consider decreasing it")
     if(starting_parameters_Schnute(1)$b >= b.max) stop("b.max is too low. Consider increasing it")
   }
 
@@ -371,9 +379,9 @@ Compare_Growth_Models <- function(data,   Linf = NULL, Linf.se = NULL,
               priors_se = priors_se)
 
 
-  if(Model == "Sch" & any(is.null(c(a.max, b.max, sigma.max)))) stop("At least one Schnute parameter or its error are not correctly specified")
+  if(Model == "Sch" & any(is.null(c(b.min, b.max, tau1, tau2)))) stop("At least one Schnute parameter or its error are not correctly specified")
 
-  priors_Schnute <- c(L2, L1, a.max, b.max, sigma.max)
+  priors_Schnute <- c(L2, L1, a.max, b.min, b.max, sigma.max)
   priors_se_Schnute <- c(L2.se, L1.se)
   dat_Schnute <- list(n = length(Age),
                       Age = Age,
