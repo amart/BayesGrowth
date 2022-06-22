@@ -11,8 +11,9 @@ data {
   vector<lower=0>[n] Length; //length data
 
   //prior data
-  real tau1; // age at a small length, L1
-  real tau2; // age at a large length, L2
+  real<lower=0> tau1; // age at a small length, L1
+  real<lower=0> tau2; // age at a large length, L2
+
   vector[5] priors; //L2, L1, a, b, sigma
   vector<lower=0>[2] priors_se; //sd of L2, L1
 
@@ -22,6 +23,7 @@ parameters {
   //Schnute parameters
   real<lower=0> L1; //length at age tau1
   real<lower=0> L2; //length at age tau2
+
   real a; // growth coefficient
   real b; // growth coefficient
 
@@ -59,7 +61,7 @@ model {
         PredL[i] = L1 * exp( log(L2 / L1) * (Age[i] - tau1) / (tau2 - tau1) );
     }
 
-    target += normal_lpdf(Length[i] | PredL[i], sigma);//likelihood
+    target += normal_lpdf(Length[i]|PredL[i], sigma);//likelihood
 
   }
 
@@ -74,15 +76,15 @@ generated quantities {
       // log_lik[i] = normal_lpdf(Length[i]|(L2 - (L2 - L1)*exp(-k*Age[i])), sigma);
 
       if (a != 0 && b != 0) {
-          log_lik[i] = normal_lpdf(Length[i] | ( ((L1^b) + ( ((L2^b) - (L1^b)) * (1 - exp(-a * (Age[i] - tau1))) / (1 - exp(-a * (tau2 - tau1))) ) )^(1/b) ), sigma);
+          log_lik[i] = normal_lpdf(Length[i]|( ((L1^b) + ( ((L2^b) - (L1^b)) * (1 - exp(-a * (Age[i] - tau1))) / (1 - exp(-a * (tau2 - tau1))) ) )^(1/b) ), sigma);
       } else
       if (a != 0 && b == 0) {
-          log_lik[i] = normal_lpdf(Length[i] | ( L1 * exp( log(L2 / L1) * (1 - exp(-a * (Age[i] - tau1))) / (1 - exp(-a * (tau2 - tau1))) ) ), sigma);
+          log_lik[i] = normal_lpdf(Length[i]|( L1 * exp( log(L2 / L1) * (1 - exp(-a * (Age[i] - tau1))) / (1 - exp(-a * (tau2 - tau1))) ) ), sigma);
       } else
       if (a == 0 && b != 0) {
-          log_lik[i] = normal_lpdf(Length[i] | ( ((L1^b) + ( ((L2^b) - (L1^b)) * (Age[i] - tau1) / (tau2 - tau1) ) )^(1/b) ), sigma);
+          log_lik[i] = normal_lpdf(Length[i]|( ((L1^b) + ( ((L2^b) - (L1^b)) * (Age[i] - tau1) / (tau2 - tau1) ) )^(1/b) ), sigma);
       } else {
-          log_lik[i] = normal_lpdf(Length[i] | ( L1 * exp( log(L2 / L1) * (Age[i] - tau1) / (tau2 - tau1) ) ), sigma);
+          log_lik[i] = normal_lpdf(Length[i]|( L1 * exp( log(L2 / L1) * (Age[i] - tau1) / (tau2 - tau1) ) ), sigma);
       }
 
     }

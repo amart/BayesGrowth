@@ -126,6 +126,7 @@ Estimate_MCMC_Growth <- function(data,  Model = NULL, Linf = NULL, Linf.se = NUL
     if(starting_parameters(1)$k >= k.max) stop("k.max is too low. Consider increasing it")
   } else {
     if(starting_parameters_Schnute(1)$a >= a.max) stop("a.max is too low. Consider increasing it")
+    if(starting_parameters_Schnute(1)$b >= b.max) stop("b.max is too low. Consider increasing it")
   }
 
 
@@ -145,6 +146,8 @@ Estimate_MCMC_Growth <- function(data,  Model = NULL, Linf = NULL, Linf.se = NUL
                 priors = priors,
                 priors_se = priors_se)
   } else {
+    if(any(is.null(c(a.max, b.max, sigma.max)))) stop("At least one Schnute parameter or its error are not correctly specified")
+
     priors <- c(L2, L1, a.max, b.max, sigma.max)
     priors_se <- c(L2.se, L1.se)
 
@@ -206,6 +209,7 @@ Estimate_MCMC_Growth <- function(data,  Model = NULL, Linf = NULL, Linf.se = NUL
                                     chains=n.chains)
 
  } else if(Model == "Sch"){
+    browser()
     Growth_model <- rstan::sampling(object = stanmodels$Schnute_stan_model,
                                     data = dat,
                                     init = starting_parameters_Schnute,
@@ -349,6 +353,7 @@ Compare_Growth_Models <- function(data,   Linf = NULL, Linf.se = NULL,
     if(starting_parameters(1)$k >= k.max) stop("k.max is too low. Consider increasing it")
   } else {
     if(starting_parameters_Schnute(1)$a >= a.max) stop("a.max is too low. Consider increasing it")
+    if(starting_parameters_Schnute(1)$b >= b.max) stop("b.max is too low. Consider increasing it")
   }
 
   if(verbose == FALSE){
@@ -357,26 +362,26 @@ Compare_Growth_Models <- function(data,   Linf = NULL, Linf.se = NULL,
     text <- iter/10
   }
 
-  if (Model != "Sch") {
-    priors <- c(Linf, L0, k.max, sigma.max)
-    priors_se <- c(Linf.se, L0.se)
+  priors <- c(Linf, L0, k.max, sigma.max)
+  priors_se <- c(Linf.se, L0.se)
+  dat <- list(n = length(Age),
+              Age = Age,
+              Length = Length,
+              priors = priors,
+              priors_se = priors_se)
 
-    dat <- list(n = length(Age),
-                Age = Age,
-                Length = Length,
-                priors = priors,
-                priors_se = priors_se)
-  } else {
-    priors <- c(L2, L1, a.max, b.max, sigma.max)
-    priors_se <- c(L2.se, L1.se)
 
-    dat <- list(n = length(Age),
-                Age = Age,
-                Length = Length,
-                tau1 = tau1, tau2 = tau2,
-                priors = priors,
-                priors_se = priors_se)
-  }
+  if(Model == "Sch" & any(is.null(c(a.max, b.max, sigma.max)))) stop("At least one Schnute parameter or its error are not correctly specified")
+
+  priors_Schnute <- c(L2, L1, a.max, b.max, sigma.max)
+  priors_se_Schnute <- c(L2.se, L1.se)
+  dat_Schnute <- list(n = length(Age),
+                      Age = Age,
+                      Length = Length,
+                      tau1 = tau1, tau2 = tau2,
+                      priors = priors_Schnute,
+                      priors_se = priors_se_Schnute)
+
 
   VB_model <-
     rstan::sampling(object = stanmodels$VB_stan_model,
@@ -391,9 +396,7 @@ Compare_Growth_Models <- function(data,   Linf = NULL, Linf.se = NULL,
                     refresh = text,
                     iter = iter,
                     cores = n_cores,
-
                     chains=n.chains)
-
 
 
   Gom_model <- rstan::sampling(object = stanmodels$Gompertz_stan_model,
@@ -425,8 +428,9 @@ Compare_Growth_Models <- function(data,   Linf = NULL, Linf.se = NULL,
                                     cores = n_cores,
                                     chains=n.chains)
 
+
   Schnute_model <- rstan::sampling(object = stanmodels$Schnute_stan_model,
-                                    data = dat,
+                                    data = dat_Schnute,
                                     init = starting_parameters_Schnute,
                                     control = controls,
                                     warmup = BurnIn,

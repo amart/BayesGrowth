@@ -33,7 +33,7 @@ static int current_statement_begin__;
 stan::io::program_reader prog_reader__() {
     stan::io::program_reader reader;
     reader.add_event(0, 0, "start", "model_Schnute_stan_model");
-    reader.add_event(92, 90, "end", "model_Schnute_stan_model");
+    reader.add_event(94, 92, "end", "model_Schnute_stan_model");
     return reader;
 }
 #include <stan_meta_header.hpp>
@@ -112,13 +112,15 @@ public:
             vals_r__ = context__.vals_r("tau1");
             pos__ = 0;
             tau1 = vals_r__[pos__++];
+            check_greater_or_equal(function__, "tau1", tau1, 0);
             current_statement_begin__ = 15;
             context__.validate_dims("data initialization", "tau2", "double", context__.to_vec());
             tau2 = double(0);
             vals_r__ = context__.vals_r("tau2");
             pos__ = 0;
             tau2 = vals_r__[pos__++];
-            current_statement_begin__ = 16;
+            check_greater_or_equal(function__, "tau2", tau2, 0);
+            current_statement_begin__ = 17;
             validate_non_negative_index("priors", "5", 5);
             context__.validate_dims("data initialization", "priors", "vector_d", context__.to_vec(5));
             priors = Eigen::Matrix<double, Eigen::Dynamic, 1>(5);
@@ -128,7 +130,7 @@ public:
             for (size_t j_1__ = 0; j_1__ < priors_j_1_max__; ++j_1__) {
                 priors(j_1__) = vals_r__[pos__++];
             }
-            current_statement_begin__ = 17;
+            current_statement_begin__ = 18;
             validate_non_negative_index("priors_se", "2", 2);
             context__.validate_dims("data initialization", "priors_se", "vector_d", context__.to_vec(2));
             priors_se = Eigen::Matrix<double, Eigen::Dynamic, 1>(2);
@@ -145,15 +147,15 @@ public:
             // validate, set parameter ranges
             num_params_r__ = 0U;
             param_ranges_i__.clear();
-            current_statement_begin__ = 23;
-            num_params_r__ += 1;
             current_statement_begin__ = 24;
             num_params_r__ += 1;
             current_statement_begin__ = 25;
             num_params_r__ += 1;
-            current_statement_begin__ = 26;
+            current_statement_begin__ = 27;
             num_params_r__ += 1;
-            current_statement_begin__ = 29;
+            current_statement_begin__ = 28;
+            num_params_r__ += 1;
+            current_statement_begin__ = 31;
             num_params_r__ += 1;
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(e, current_statement_begin__, prog_reader__());
@@ -172,7 +174,7 @@ public:
         (void) pos__; // dummy call to supress warning
         std::vector<double> vals_r__;
         std::vector<int> vals_i__;
-        current_statement_begin__ = 23;
+        current_statement_begin__ = 24;
         if (!(context__.contains_r("L1")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable L1 missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("L1");
@@ -185,7 +187,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable L1: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 24;
+        current_statement_begin__ = 25;
         if (!(context__.contains_r("L2")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable L2 missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("L2");
@@ -198,7 +200,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable L2: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 25;
+        current_statement_begin__ = 27;
         if (!(context__.contains_r("a")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable a missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("a");
@@ -211,7 +213,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable a: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 26;
+        current_statement_begin__ = 28;
         if (!(context__.contains_r("b")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable b missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("b");
@@ -224,7 +226,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable b: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 29;
+        current_statement_begin__ = 31;
         if (!(context__.contains_r("sigma")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable sigma missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("sigma");
@@ -262,35 +264,35 @@ public:
         try {
             stan::io::reader<local_scalar_t__> in__(params_r__, params_i__);
             // model parameters
-            current_statement_begin__ = 23;
+            current_statement_begin__ = 24;
             local_scalar_t__ L1;
             (void) L1;  // dummy to suppress unused var warning
             if (jacobian__)
                 L1 = in__.scalar_lb_constrain(0, lp__);
             else
                 L1 = in__.scalar_lb_constrain(0);
-            current_statement_begin__ = 24;
+            current_statement_begin__ = 25;
             local_scalar_t__ L2;
             (void) L2;  // dummy to suppress unused var warning
             if (jacobian__)
                 L2 = in__.scalar_lb_constrain(0, lp__);
             else
                 L2 = in__.scalar_lb_constrain(0);
-            current_statement_begin__ = 25;
+            current_statement_begin__ = 27;
             local_scalar_t__ a;
             (void) a;  // dummy to suppress unused var warning
             if (jacobian__)
                 a = in__.scalar_constrain(lp__);
             else
                 a = in__.scalar_constrain();
-            current_statement_begin__ = 26;
+            current_statement_begin__ = 28;
             local_scalar_t__ b;
             (void) b;  // dummy to suppress unused var warning
             if (jacobian__)
                 b = in__.scalar_constrain(lp__);
             else
                 b = in__.scalar_constrain();
-            current_statement_begin__ = 29;
+            current_statement_begin__ = 31;
             local_scalar_t__ sigma;
             (void) sigma;  // dummy to suppress unused var warning
             if (jacobian__)
@@ -299,50 +301,50 @@ public:
                 sigma = in__.scalar_lb_constrain(0);
             // model body
             {
-            current_statement_begin__ = 34;
+            current_statement_begin__ = 36;
             validate_non_negative_index("PredL", "n", n);
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> PredL(n);
             stan::math::initialize(PredL, DUMMY_VAR__);
             stan::math::fill(PredL, DUMMY_VAR__);
-            current_statement_begin__ = 37;
+            current_statement_begin__ = 39;
             lp_accum__.add(normal_log<propto__>(L2, get_base1(priors, 1, "priors", 1), get_base1(priors_se, 1, "priors_se", 1)));
-            current_statement_begin__ = 38;
-            lp_accum__.add(normal_log<propto__>(L1, get_base1(priors, 2, "priors", 1), get_base1(priors_se, 2, "priors_se", 1)));
             current_statement_begin__ = 40;
+            lp_accum__.add(normal_log<propto__>(L1, get_base1(priors, 2, "priors", 1), get_base1(priors_se, 2, "priors_se", 1)));
+            current_statement_begin__ = 42;
             lp_accum__.add(uniform_log<propto__>(a, 0, get_base1(priors, 3, "priors", 1)));
-            current_statement_begin__ = 41;
-            lp_accum__.add(uniform_log<propto__>(b, -(25), get_base1(priors, 4, "priors", 1)));
             current_statement_begin__ = 43;
+            lp_accum__.add(uniform_log<propto__>(b, -(25), get_base1(priors, 4, "priors", 1)));
+            current_statement_begin__ = 45;
             lp_accum__.add(uniform_log<propto__>(sigma, 0, get_base1(priors, 5, "priors", 1)));
-            current_statement_begin__ = 47;
+            current_statement_begin__ = 49;
             for (int i = 1; i <= n; ++i) {
-                current_statement_begin__ = 50;
+                current_statement_begin__ = 52;
                 if (as_bool((primitive_value(logical_neq(a, 0)) && primitive_value(logical_neq(b, 0))))) {
-                    current_statement_begin__ = 51;
+                    current_statement_begin__ = 53;
                     stan::model::assign(PredL, 
                                 stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                                 pow((pow(L1, b) + (((pow(L2, b) - pow(L1, b)) * (1 - stan::math::exp((-(a) * (get_base1(Age, i, "Age", 1) - tau1))))) / (1 - stan::math::exp((-(a) * (tau2 - tau1)))))), (1 / b)), 
                                 "assigning variable PredL");
                 } else if (as_bool((primitive_value(logical_neq(a, 0)) && primitive_value(logical_eq(b, 0))))) {
-                    current_statement_begin__ = 54;
+                    current_statement_begin__ = 56;
                     stan::model::assign(PredL, 
                                 stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                                 (L1 * stan::math::exp(((stan::math::log((L2 / L1)) * (1 - stan::math::exp((-(a) * (get_base1(Age, i, "Age", 1) - tau1))))) / (1 - stan::math::exp((-(a) * (tau2 - tau1))))))), 
                                 "assigning variable PredL");
                 } else if (as_bool((primitive_value(logical_eq(a, 0)) && primitive_value(logical_neq(b, 0))))) {
-                    current_statement_begin__ = 57;
+                    current_statement_begin__ = 59;
                     stan::model::assign(PredL, 
                                 stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                                 pow((pow(L1, b) + (((pow(L2, b) - pow(L1, b)) * (get_base1(Age, i, "Age", 1) - tau1)) / (tau2 - tau1))), (1 / b)), 
                                 "assigning variable PredL");
                 } else {
-                    current_statement_begin__ = 59;
+                    current_statement_begin__ = 61;
                     stan::model::assign(PredL, 
                                 stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                                 (L1 * stan::math::exp(((stan::math::log((L2 / L1)) * (get_base1(Age, i, "Age", 1) - tau1)) / (tau2 - tau1)))), 
                                 "assigning variable PredL");
                 }
-                current_statement_begin__ = 62;
+                current_statement_begin__ = 64;
                 lp_accum__.add(normal_log(get_base1(Length, i, "Length", 1), get_base1(PredL, i, "PredL", 1), sigma));
             }
             }
@@ -424,35 +426,35 @@ public:
             if (!include_gqs__ && !include_tparams__) return;
             if (!include_gqs__) return;
             // declare and define generated quantities
-            current_statement_begin__ = 71;
+            current_statement_begin__ = 73;
             validate_non_negative_index("log_lik", "n", n);
             Eigen::Matrix<double, Eigen::Dynamic, 1> log_lik(n);
             stan::math::initialize(log_lik, DUMMY_VAR__);
             stan::math::fill(log_lik, DUMMY_VAR__);
             // generated quantities statements
-            current_statement_begin__ = 73;
+            current_statement_begin__ = 75;
             for (int i = 1; i <= n; ++i) {
-                current_statement_begin__ = 76;
+                current_statement_begin__ = 78;
                 if (as_bool((primitive_value(logical_neq(a, 0)) && primitive_value(logical_neq(b, 0))))) {
-                    current_statement_begin__ = 77;
+                    current_statement_begin__ = 79;
                     stan::model::assign(log_lik, 
                                 stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                                 normal_log(get_base1(Length, i, "Length", 1), pow((pow(L1, b) + (((pow(L2, b) - pow(L1, b)) * (1 - stan::math::exp((-(a) * (get_base1(Age, i, "Age", 1) - tau1))))) / (1 - stan::math::exp((-(a) * (tau2 - tau1)))))), (1 / b)), sigma), 
                                 "assigning variable log_lik");
                 } else if (as_bool((primitive_value(logical_neq(a, 0)) && primitive_value(logical_eq(b, 0))))) {
-                    current_statement_begin__ = 80;
+                    current_statement_begin__ = 82;
                     stan::model::assign(log_lik, 
                                 stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                                 normal_log(get_base1(Length, i, "Length", 1), (L1 * stan::math::exp(((stan::math::log((L2 / L1)) * (1 - stan::math::exp((-(a) * (get_base1(Age, i, "Age", 1) - tau1))))) / (1 - stan::math::exp((-(a) * (tau2 - tau1))))))), sigma), 
                                 "assigning variable log_lik");
                 } else if (as_bool((primitive_value(logical_eq(a, 0)) && primitive_value(logical_neq(b, 0))))) {
-                    current_statement_begin__ = 83;
+                    current_statement_begin__ = 85;
                     stan::model::assign(log_lik, 
                                 stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                                 normal_log(get_base1(Length, i, "Length", 1), pow((pow(L1, b) + (((pow(L2, b) - pow(L1, b)) * (get_base1(Age, i, "Age", 1) - tau1)) / (tau2 - tau1))), (1 / b)), sigma), 
                                 "assigning variable log_lik");
                 } else {
-                    current_statement_begin__ = 85;
+                    current_statement_begin__ = 87;
                     stan::model::assign(log_lik, 
                                 stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                                 normal_log(get_base1(Length, i, "Length", 1), (L1 * stan::math::exp(((stan::math::log((L2 / L1)) * (get_base1(Age, i, "Age", 1) - tau1)) / (tau2 - tau1)))), sigma), 
@@ -460,7 +462,7 @@ public:
                 }
             }
             // validate, write generated quantities
-            current_statement_begin__ = 71;
+            current_statement_begin__ = 73;
             size_t log_lik_j_1_max__ = n;
             for (size_t j_1__ = 0; j_1__ < log_lik_j_1_max__; ++j_1__) {
                 vars__.push_back(log_lik(j_1__));
