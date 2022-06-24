@@ -115,12 +115,12 @@ Estimate_MCMC_Growth <- function(data,  Model = NULL, Linf = NULL, Linf.se = NUL
 
     a <- suppressWarnings(abs(-log(model$coef[2]))) #in case a nan occurs
     a <- ifelse(is.nan(a),0.1,a) # in case a nan occurs
-    b <- -19.0 # from paper from Brit
+    b <- (b.min + b.max) / 2
 
     L2<-abs(model$coef[1]/(1-model$coef[2]))
 
-    # L1<-lm(mean.age ~ poly(as.numeric(names(mean.age)), 2, raw = TRUE))$coef[1]
-    L1<-0.1*L2
+    L1<-lm(mean.age ~ poly(as.numeric(names(mean.age)), 2, raw = TRUE))$coef[1]
+    # L1<-0.1*L2
 
     return(list(L2 = L2, L1 = L1, a = a, b = b, sigma = sigma.max/2))
   }
@@ -213,7 +213,7 @@ Estimate_MCMC_Growth <- function(data,  Model = NULL, Linf = NULL, Linf.se = NUL
                                     chains=n.chains)
 
  } else if(Model == "Sch"){
-    browser()
+    # browser()
     Growth_model <- rstan::sampling(object = stanmodels$Schnute_stan_model,
                                     data = dat,
                                     init = starting_parameters_Schnute,
@@ -346,12 +346,12 @@ Compare_Growth_Models <- function(data,   Linf = NULL, Linf.se = NULL,
 
     a <- suppressWarnings(abs(-log(model$coef[2]))) #in case a nan occurs
     a <- ifelse(is.nan(a),0.1,a) # in case a nan occurs
-    b <- -19.0 # in paper from Brit
+    b <- (b.min + b.max) / 2
 
     L2<-abs(model$coef[1]/(1-model$coef[2]))
 
-    # L1<-lm(mean.age ~ poly(as.numeric(names(mean.age)), 2, raw = TRUE))$coef[1]
-    L1<-0.1*L2
+    L1<-lm(mean.age ~ poly(as.numeric(names(mean.age)), 2, raw = TRUE))$coef[1]
+    # L1<-0.1*L2
 
     return(list(L2 = L2, L1 = L1, a = a, b = b, sigma = sigma.max/2))
   }

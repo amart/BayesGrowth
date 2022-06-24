@@ -8,7 +8,45 @@ Then run "pkgbuild::compile_dll()" and "devtools::document()".
 Install locally with "install.packages("../BayesGrowth", repos = NULL, type = "source")"
 
 
-Built on Windows 10 with R version 4.0.5 and Rtools 4.0.
+Built on Windows 10 with R version 4.1.3 and Rtools 4.0.
 
 Built on CentOS 7.9 with R version 3.6.0 and devtools-10 for CXX14
+
+
+Example run:
+
+brary(BayesGrowth)
+
+data("example_data")
+
+## Biological info - lengths in mm
+max_size <- 440
+max_size_se <- 5
+birth_size <- 0
+birth_size_se <- 0.001 # an se cannot be zero
+
+# Use the function to estimate the rstan model
+vb.fit <- Estimate_MCMC_Growth(data = example_data, 
+                              Model = "VB" ,
+                              iter = 5000,
+                              Linf = max_size,
+                              Linf.se = max_size_se,
+                              L0 = birth_size,
+                              sigma.max = 100,
+                              L0.se = birth_size_se,
+                              k.max = 1)
+
+
+
+sch.fit <- Estimate_MCMC_Growth(data = example_data, 
+                                Model = "Sch" ,
+                                iter = 5000,
+                                Linf = max_size,
+                                Linf.se = max_size_se,
+                                L0 = birth_size,
+                                sigma.max = 100,
+                                L0.se = 1,
+                                k.max = 1,
+                                b.min = -10, b.max = 2,
+                                tau1 = 0, tau2 = 11)
 
