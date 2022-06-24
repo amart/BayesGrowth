@@ -3,7 +3,7 @@ To (re)build on Windows
 After adding the code for the Schnute model,
 run "rstantools::rstan_config()" to generate and compile the Stan code.
 
-Then run "pkgbuild::compile_dll()" and "devtools::document()".
+Then run "pkgbuild::compile_dll()" and "devtools::document()". Also "roxygen2::roxygenise()"?
 
 Install locally with "install.packages("../BayesGrowth", repos = NULL, type = "source")"
 
@@ -15,7 +15,7 @@ Built on CentOS 7.9 with R version 3.6.0 and devtools-10 for CXX14
 
 Example run:
 
-brary(BayesGrowth)
+library(BayesGrowth)
 
 data("example_data")
 
@@ -47,6 +47,9 @@ sch.fit <- Estimate_MCMC_Growth(data = example_data,
                                 sigma.max = 100,
                                 L0.se = 1,
                                 k.max = 1,
-                                b.min = -10, b.max = 2,
+                                b.min = -4, b.max = 2,
                                 tau1 = 0, tau2 = 11)
+
+
+
 
