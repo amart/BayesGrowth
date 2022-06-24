@@ -53,3 +53,47 @@ sch.fit <- Estimate_MCMC_Growth(data = example_data,
 
 
 
+> vb.fit
+Inference for Stan model: VB_stan_model.
+4 chains, each with iter=5000; warmup=2500; thin=1; 
+post-warmup draws per chain=2500, total post-warmup draws=10000.
+
+          mean se_mean   sd     2.5%      25%      50%      75%    97.5% n_eff Rhat
+Linf    317.98    0.08 4.04   310.85   315.15   317.71   320.56   326.55  2854    1
+k         0.66    0.00 0.03     0.59     0.64     0.66     0.68     0.73  2886    1
+L0        0.00    0.00 0.00     0.00     0.00     0.00     0.00     0.00  4416    1
+sigma    24.32    0.02 0.86    22.75    23.72    24.28    24.88    26.10  3200    1
+lp__  -3933.90    0.03 1.50 -3937.78 -3934.64 -3933.56 -3932.79 -3932.03  2593    1
+
+Samples were drawn using NUTS(diag_e) at Fri Jun 24 14:11:04 2022.
+For each parameter, n_eff is a crude measure of effective sample size,
+and Rhat is the potential scale reduction factor on split chains (at 
+convergence, Rhat=1).
+> sch.fit
+Inference for Stan model: Schnute_stan_model.
+4 chains, each with iter=5000; warmup=2500; thin=1; 
+post-warmup draws per chain=2500, total post-warmup draws=10000.
+
+          mean se_mean   sd     2.5%      25%      50%      75%    97.5% n_eff Rhat
+L2      368.62    0.22 5.31   358.20   365.07   368.60   372.23   379.12   579 1.01
+a         0.21    0.00 0.02     0.18     0.20     0.21     0.22     0.24   583 1.01
+L1        0.81    0.02 0.58     0.05     0.34     0.70     1.16     2.19   859 1.00
+sigma    24.69    0.03 0.81    23.13    24.15    24.66    25.25    26.29   658 1.01
+b         1.99    0.00 0.01     1.98     1.99     2.00     2.00     2.00   814 1.01
+lp__  -3743.69    0.06 1.74 -3747.85 -3744.64 -3743.37 -3742.40 -3741.26   757 1.00
+
+Samples were drawn using NUTS(diag_e) at Fri Jun 24 14:18:13 2022.
+For each parameter, n_eff is a crude measure of effective sample size,
+and Rhat is the potential scale reduction factor on split chains (at 
+convergence, Rhat=1).
+
+
+
+
+library(tidyverse)
+library(rstan)
+
+pairs(vb.fit, pars = c("Linf", "k","L0", "sigma"))
+pairs(sch.fit, pars = c("L2", "a","L1", "b", "sigma"))
+
+
